@@ -9,8 +9,8 @@ function Vec3(x, y, z) {
 // load canvas
 var canvas = document.createElement('canvas');
 document.body.insertBefore(canvas, document.body.childNodes[0]);
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+//canvas.height = window.innerHeight;
+//canvas.width = window.innerWidth;
 canvas.width=500;
 canvas.height=500;
 var ctx = canvas.getContext('2d');
@@ -19,41 +19,57 @@ var data = imageData.data;
 
 // define raymarching/fractal variables
 var power = 8,
-maxRaySteps = 150,
-minimumStepDistance = 0.0001,
-iterations = 16,
+maxRaySteps = 50,
+minimumStepDistance = 0.001,
+iterations = 8,
 bailout = 8,
 camera = new Vec3(0,-5,0),
 up = new Vec3(0,0,1),
 focus = new Vec3(0,0,0),
-viewWidth = 4,
-viewHeight = viewWidth;
+viewWidth = 6,
+sample = 16,
+viewHeight = viewWidth,
+anim;
 
 window.onload = function() {
-  render();
+  anim = requestAnimationFrame(render);
 }
 
+// given an upsample rate (1 is full res, 16 is 1/16th res), render the frame
 var render = function() {
-  var i=0;
-  // iterate through each pixel on the canvas
-  for(let x=0; x<canvas.width; x++) {
-    for(let y=0; y<canvas.height; y++) {
-      // convert x,y to a direction vector - note, this will be improved heavily in the future
-      var x0 = ( x - (canvas.width/2) ) * ( viewWidth/(2*canvas.width) );
-      var y0 = ( (canvas.width/2) - y ) * ( viewHeight/(2*canvas.height ) );
-      //var x0 = 
-      //var y0 = 
-      //var z0 = 
+  if(sample>=1) {
+    var stepX = sample;
+    var stepY = sample; 
+    var i=0;
+    // iterate through each pixel on the canvas
+    for(let x=0; x<canvas.width; x+=stepX) {
+      for(let y=0; y<canvas.height; y+=stepY){
+        // convert x,y to a direction vector - note, this will be improved heavily in the future
+        var x0 = ( x - (canvas.width/2) ) * ( viewWidth/(2*canvas.width) );
+        var y0 = ( (canvas.width/2) - y ) * ( viewHeight/(2*canvas.height ) );
+        //var x0 = 
+        //var y0 = 
+        //var z0 = 
 
-      var direction = normalize(new Vec3(x0, 5, y0));
-      var color = march(camera, direction);
+        var direction = normalize(new Vec3(x0, 5, y0));
+        var color = march(camera, direction);
 
-      data[i ++] = color*255;
-      data[i ++] = color*255;
-      data[i ++] = color*255;   
-      data[i ++] = 255;
+        /*data[i++] = color*255;
+        data[i++] = color*255;
+        data[i++] = color*255;   
+        data[i++] = 255;*/
+        //ctx.putImageData(imageData, 0, 0);
+        ctx.beginPath();
+        ctx.fillStyle = 'hsl(' + 255*color + ',' + 80 + '%,' + 80 + '%)';
+        ctx.fillRect(x,y,stepX,stepY);
+        ctx.stroke();
       }
-      ctx.putImageData(imageData, 0, 0);
+    }
+    sample/=4;
+    requestAnimationFrame(render);
+  }
+  else {
+    cancelAnimationFrame(anim);
   }
 }
 
